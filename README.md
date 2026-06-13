@@ -6,13 +6,18 @@ A phone-friendly web-based terminal inspired by [ttyd](https://github.com/tsl092
 - Telegram-bot 6-digit OTP login
 - Server-wide read-only mode (like `ttyd -r`)
 - Phone control bar: arrow keys, Ctrl+C/Z/D, Tab, Enter, quick commands
+- Foldable on-screen keyboard (letters, numbers, symbols, space, backspace)
 - Runs in a background `tmux` session with UFW port auto-open
 
 ## Screenshots
 
-Phone viewport
+Phone viewport — controls folded
 
 ![Phone layout](demo-phone.png)
+
+Phone viewport — keyboard open
+
+![Phone keyboard](demo-phone-keyboard.png)
 
 Desktop viewport
 

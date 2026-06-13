@@ -17,12 +17,13 @@ const keyMap = {
   'ctrl-c': '\x03',
   'ctrl-z': '\x1a',
   'ctrl-d': '\x04',
+  backspace: '\x7f',
 };
 
 const cmdMap = {
   clear: 'clear',
   ls: 'ls',
-  list: 'ls -la',
+  list: 'cd ..',
 };
 
 function encode(str) {
@@ -226,7 +227,6 @@ function switchTab(id) {
   const t = tabs.get(id);
   setTimeout(() => {
     t.fitAddon.fit();
-    t.term.focus();
   }, 0);
 }
 
@@ -256,26 +256,37 @@ function closeTab(id) {
 function initApp() {
   document.getElementById('new-tab').addEventListener('click', createTerminal);
 
+  // Section toggles
   document.getElementById('controls').addEventListener('click', (e) => {
     if (!e.target.matches('button')) return;
-    const t = tabs.get(activeTabId);
-    if (!t || t.socket.readyState !== WebSocket.OPEN) return;
 
-    const key = e.target.dataset.key;
-    const cmd = e.target.dataset.cmd;
-
-    if (readOnlyMode) {
-      // In read-only mode, still allow Ctrl+C/Z/D to be sent? No — enforce silence.
+    // Fold / unfold sections
+    if (e.target.classList.contains('section-toggle')) {
+      const section = e.target.dataset.section;
+      const content = document.getElementById(`section-${section}`);
+      const isCollapsed = content.classList.toggle('collapsed');
+      e.target.textContent = `${isCollapsed ? '▶' : '▼'} ${section.charAt(0).toUpperCase() + section.slice(1)}`;
       return;
     }
 
+    const t = tabs.get(activeTabId);
+    if (!t || t.socket.readyState !== WebSocket.OPEN) return;
+
+    if (readOnlyMode) return;
+
+    const key = e.target.dataset.key;
+    const cmd = e.target.dataset.cmd;
+    const char = e.target.dataset.char;
+
     if (key && keyMap[key]) {
       t.socket.send(encode(keyMap[key]));
-      t.term.focus();
     } else if (cmd && cmdMap[cmd]) {
       t.socket.send(encode(cmdMap[cmd] + '\r'));
-      t.term.focus();
+    } else if (char !== undefined) {
+      t.socket.send(encode(char));
     }
+    // Keep the native phone keyboard hidden after using on-screen buttons
+    t.term.blur();
   });
 
   createTerminal();

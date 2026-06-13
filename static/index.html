@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Web Terminal</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
   <div id="login-overlay">
@@ -39,28 +39,66 @@
     </div>
     <div id="terminals"></div>
     <div id="controls">
-      <div class="control-row">
-        <button data-key="up" title="Up arrow">↑</button>
-        <button data-key="left" title="Left arrow">←</button>
-        <button data-key="right" title="Right arrow">→</button>
-        <button data-key="down" title="Down arrow">↓</button>
-        <button data-key="tab" title="Tab">Tab</button>
-        <button data-key="enter" title="Enter">Enter</button>
+      <div class="control-section">
+        <button class="section-toggle" data-section="controls">▼ Controls</button>
+        <div class="section-content" id="section-controls">
+          <div class="control-row">
+            <button data-key="up" title="Up arrow">↑</button>
+            <button data-key="left" title="Left arrow">←</button>
+            <button data-key="right" title="Right arrow">→</button>
+            <button data-key="down" title="Down arrow">↓</button>
+            <button data-key="tab" title="Tab">Tab</button>
+            <button data-key="enter" title="Enter">Enter</button>
+          </div>
+          <div class="control-row">
+            <button data-key="ctrl-c" title="Send Ctrl+C">Ctrl+C</button>
+            <button data-key="ctrl-z" title="Send Ctrl+Z">Ctrl+Z</button>
+            <button data-key="ctrl-d" title="Send Ctrl+D">Ctrl+D</button>
+          </div>
+          <div class="control-row">
+            <button data-cmd="clear" title="Run clear">clear</button>
+            <button data-cmd="ls" title="Run ls">ls</button>
+            <button data-cmd="list" title="Go up one directory">list</button>
+          </div>
+        </div>
       </div>
-      <div class="control-row">
-        <button data-key="ctrl-c" title="Send Ctrl+C">Ctrl+C</button>
-        <button data-key="ctrl-z" title="Send Ctrl+Z">Ctrl+Z</n        <button data-key="ctrl-d" title="Send Ctrl+D">Ctrl+D</button>
-      </div>
-      <div class="control-row">
-        <button data-cmd="clear" title="Run clear">clear</button>
-        <button data-cmd="ls" title="Run ls">ls</button>
-        <button data-cmd="list" title="Run ls -la">list</button>
+      <div class="control-section">
+        <button class="section-toggle" data-section="keyboard">▶ Keyboard</button>
+        <div class="section-content collapsed" id="section-keyboard">
+          <div class="keyboard-row">
+            <button data-char="1">1</button><button data-char="2">2</button><button data-char="3">3</button>
+            <button data-char="4">4</button><button data-char="5">5</button><button data-char="6">6</button>
+            <button data-char="7">7</button><button data-char="8">8</button><button data-char="9">9</button>
+            <button data-char="0">0</button>
+          </div>
+          <div class="keyboard-row">
+            <button data-char="q">q</button><button data-char="w">w</button><button data-char="e">e</button>
+            <button data-char="r">r</button><button data-char="t">t</button><button data-char="y">y</button>
+            <button data-char="u">u</button><button data-char="i">i</button><button data-char="o">o</button>
+            <button data-char="p">p</button>
+          </div>
+          <div class="keyboard-row">
+            <button data-char="a">a</button><button data-char="s">s</button><button data-char="d">d</button>
+            <button data-char="f">f</button><button data-char="g">g</button><button data-char="h">h</button>
+            <button data-char="j">j</button><button data-char="k">k</button><button data-char="l">l</button>
+          </div>
+          <div class="keyboard-row">
+            <button data-char="z">z</button><button data-char="x">x</button><button data-char="c">c</button>
+            <button data-char="v">v</button><button data-char="b">b</button><button data-char="n">n</button>
+            <button data-char="m">m</button><button data-key="backspace" title="Backspace">⌫</button>
+          </div>
+          <div class="keyboard-row">
+            <button data-char="-">-</button><button data-char="_">_</button><button data-char=".">.</button>
+            <button data-char="/">/</button><button data-char="@">@</button><button data-char=" ">Space</button>
+            <button data-key="enter">Enter</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>

@@ -245,22 +245,60 @@ header {
 #controls {
   background: #252526;
   border-top: 1px solid #3c3c3c;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.control-section {
+  background: #1e1e1e;
+  border: 1px solid #3c3c3c;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.section-toggle {
+  width: 100%;
+  padding: 10px;
+  background: #2d2d2d;
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.section-toggle:active {
+  background: #0e639c;
+}
+
+.section-content {
   padding: 8px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  flex-shrink: 0;
 }
 
-.control-row {
+.section-content.collapsed {
+  display: none;
+}
+
+.control-row,
+.keyboard-row {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
-#controls button {
+#controls button:not(.section-toggle) {
   flex: 1 1 0;
   min-width: 0;
-  padding: 12px 4px;
+  padding: 12px 2px;
   font-size: 14px;
   font-weight: 500;
   background: #3c3c3c;
@@ -273,21 +311,29 @@ header {
   line-height: 1.2;
 }
 
-#controls button:active {
+#controls button:not(.section-toggle):active {
   background: #0e639c;
   border-color: #0e639c;
 }
 
+.keyboard-row button {
+  text-transform: uppercase;
+}
+
 @media (max-width: 480px) {
-  #controls button {
-    padding: 10px 2px;
+  #controls button:not(.section-toggle) {
+    padding: 10px 1px;
     font-size: 12px;
+  }
+  .section-toggle {
+    font-size: 13px;
+    padding: 8px;
   }
 }
 
 @media (min-width: 768px) {
-  #controls button {
-    padding: 10px 14px;
+  #controls button:not(.section-toggle) {
+    padding: 10px 10px;
     font-size: 15px;
   }
 }
