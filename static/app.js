@@ -1,8 +1,10 @@
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-const wsUrl = `${protocol}//${window.location.host}`;
+const wsUrl = `${protocol}//${window.location.host}/ws`;
 
 let tabCounter = 0;
 let activeTabId = null;
+let currentUser = null;
+let readOnlyMode = false;
 const tabs = new Map();
 
 const keyMap = {
@@ -26,6 +28,108 @@ const cmdMap = {
 function encode(str) {
   return new TextEncoder().encode(str);
 }
+
+// ---------------------------------------------------------------------------
+// Auth UI
+// ---------------------------------------------------------------------------
+
+const loginOverlay = document.getElementById('login-overlay');
+const loginForm = document.getElementById('login-form');
+const otpForm = document.getElementById('otp-form');
+const loginError = document.getElementById('login-error');
+const otpError = document.getElementById('otp-error');
+const usernameInput = document.getElementById('username');
+const passwordInput = document.getElementById('password');
+const otpInput = document.getElementById('otp');
+const readonlyBadge = document.getElementById('readonly-badge');
+
+let pendingUsername = '';
+
+async function apiPost(path, body) {
+  const res = await fetch(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  return { ok: res.ok, status: res.status, data };
+}
+
+async function checkAuth() {
+  const res = await fetch('/auth-check');
+  const data = await res.json();
+  if (data.authenticated) {
+    currentUser = data.username;
+    readOnlyMode = data.read_only;
+    hideLogin();
+    initApp();
+  } else {
+    showLogin();
+  }
+}
+
+function showLogin() {
+  loginOverlay.classList.remove('hidden');
+  loginForm.classList.remove('hidden');
+  otpForm.classList.add('hidden');
+  usernameInput.focus();
+}
+
+function showOtp() {
+  loginForm.classList.add('hidden');
+  otpForm.classList.remove('hidden');
+  otpInput.value = '';
+  otpInput.focus();
+}
+
+function hideLogin() {
+  loginOverlay.classList.add('hidden');
+  if (readOnlyMode) {
+    readonlyBadge.classList.remove('hidden');
+  } else {
+    readonlyBadge.classList.add('hidden');
+  }
+}
+
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  loginError.textContent = '';
+  pendingUsername = usernameInput.value.trim();
+  const { ok, data } = await apiPost('/api/login', {
+    username: pendingUsername,
+    password: passwordInput.value,
+  });
+  if (ok) {
+    showOtp();
+  } else {
+    loginError.textContent = data.error || 'Login failed';
+  }
+});
+
+otpForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  otpError.textContent = '';
+  const { ok, data } = await apiPost('/api/verify-otp', {
+    username: pendingUsername,
+    otp: otpInput.value.trim(),
+  });
+  if (ok) {
+    readOnlyMode = data.read_only;
+    hideLogin();
+    initApp();
+  } else {
+    otpError.textContent = data.error || 'OTP verification failed';
+  }
+});
+
+document.getElementById('logout').addEventListener('click', async () => {
+  await apiPost('/api/logout', {});
+  location.reload();
+});
+
+// ---------------------------------------------------------------------------
+// Terminal logic
+// ---------------------------------------------------------------------------
 
 function createTerminal() {
   const id = ++tabCounter;
@@ -86,6 +190,7 @@ function createTerminal() {
   };
 
   term.onData((data) => {
+    if (readOnlyMode) return;
     if (socket.readyState === WebSocket.OPEN) {
       socket.send(encode(data));
     }
@@ -93,7 +198,6 @@ function createTerminal() {
 
   term.onResize(resize);
   window.addEventListener('resize', resize);
-  // Also fit when orientation changes on phones.
   window.addEventListener('orientationchange', () => setTimeout(resize, 200));
 
   tabEl.addEventListener('click', (e) => {
@@ -149,24 +253,33 @@ function closeTab(id) {
   }
 }
 
-document.getElementById('new-tab').addEventListener('click', createTerminal);
+function initApp() {
+  document.getElementById('new-tab').addEventListener('click', createTerminal);
 
-document.getElementById('controls').addEventListener('click', (e) => {
-  if (!e.target.matches('button')) return;
-  const t = tabs.get(activeTabId);
-  if (!t || t.socket.readyState !== WebSocket.OPEN) return;
+  document.getElementById('controls').addEventListener('click', (e) => {
+    if (!e.target.matches('button')) return;
+    const t = tabs.get(activeTabId);
+    if (!t || t.socket.readyState !== WebSocket.OPEN) return;
 
-  const key = e.target.dataset.key;
-  const cmd = e.target.dataset.cmd;
+    const key = e.target.dataset.key;
+    const cmd = e.target.dataset.cmd;
 
-  if (key && keyMap[key]) {
-    t.socket.send(encode(keyMap[key]));
-    t.term.focus();
-  } else if (cmd && cmdMap[cmd]) {
-    t.socket.send(encode(cmdMap[cmd] + '\r'));
-    t.term.focus();
-  }
-});
+    if (readOnlyMode) {
+      // In read-only mode, still allow Ctrl+C/Z/D to be sent? No — enforce silence.
+      return;
+    }
 
-// Initialize first terminal.
-createTerminal();
+    if (key && keyMap[key]) {
+      t.socket.send(encode(keyMap[key]));
+      t.term.focus();
+    } else if (cmd && cmdMap[cmd]) {
+      t.socket.send(encode(cmdMap[cmd] + '\r'));
+      t.term.focus();
+    }
+  });
+
+  createTerminal();
+}
+
+// Start by checking auth
+checkAuth();

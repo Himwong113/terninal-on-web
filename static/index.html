@@ -5,11 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Web Terminal</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div id="login-overlay">
+    <div id="login-box">
+      <h2>🔐 Web Terminal</h2>
+      <form id="login-form">
+        <input type="text" id="username" placeholder="Account" autocomplete="username" required>
+        <input type="password" id="password" placeholder="Password" autocomplete="current-password" required>
+        <button type="submit">Send OTP</button>
+        <div class="error" id="login-error"></div>
+      </form>
+      <form id="otp-form" class="hidden">
+        <p>Enter the 6-digit code sent to your Telegram</p>
+        <input type="text" id="otp" placeholder="123456" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" required>
+        <button type="submit">Verify</button>
+        <div class="error" id="otp-error"></div>
+      </form>
+    </div>
+  </div>
+
   <div id="app">
-    <header>Web Terminal</header>
+    <header>
+      <span>Web Terminal</span>
+      <div id="header-right">
+        <span id="readonly-badge" class="hidden">READ ONLY</span>
+        <button id="logout">Logout</button>
+      </div>
+    </header>
     <div id="tab-bar">
       <button id="new-tab" title="New terminal">+ New</button>
     </div>
@@ -25,8 +49,7 @@
       </div>
       <div class="control-row">
         <button data-key="ctrl-c" title="Send Ctrl+C">Ctrl+C</button>
-        <button data-key="ctrl-z" title="Send Ctrl+Z">Ctrl+Z</button>
-        <button data-key="ctrl-d" title="Send Ctrl+D">Ctrl+D</button>
+        <button data-key="ctrl-z" title="Send Ctrl+Z">Ctrl+Z</n        <button data-key="ctrl-d" title="Send Ctrl+D">Ctrl+D</button>
       </div>
       <div class="control-row">
         <button data-cmd="clear" title="Run clear">clear</button>
@@ -38,6 +61,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
-  <script src="app.js?v=2"></script>
+  <script src="app.js"></script>
 </body>
 </html>

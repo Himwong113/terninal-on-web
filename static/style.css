@@ -12,6 +12,90 @@ html, body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
+#login-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+#login-overlay.hidden {
+  display: none;
+}
+
+#login-box {
+  background: #252526;
+  border: 1px solid #3c3c3c;
+  border-radius: 12px;
+  padding: 24px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+#login-box h2 {
+  margin: 0 0 20px;
+  text-align: center;
+  font-size: 20px;
+}
+
+#login-box form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#login-box form.hidden {
+  display: none;
+}
+
+#login-box p {
+  margin: 0 0 8px;
+  text-align: center;
+  color: #ccc;
+  font-size: 14px;
+}
+
+#login-box input {
+  padding: 12px;
+  border: 1px solid #555;
+  border-radius: 8px;
+  background: #1e1e1e;
+  color: #fff;
+  font-size: 16px;
+}
+
+#login-box input:focus {
+  outline: none;
+  border-color: #0e639c;
+}
+
+#login-box button {
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #0e639c;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#login-box button:active {
+  background: #1177bb;
+}
+
+#login-box .error {
+  color: #f48771;
+  font-size: 14px;
+  text-align: center;
+  min-height: 20px;
+}
+
 #app {
   display: flex;
   flex-direction: column;
@@ -20,12 +104,49 @@ html, body {
 }
 
 header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 10px 12px;
   background: #2d2d2d;
   font-weight: 600;
   font-size: 16px;
   border-bottom: 1px solid #3c3c3c;
   flex-shrink: 0;
+}
+
+#header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#readonly-badge {
+  padding: 4px 8px;
+  background: #c75450;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+#readonly-badge.hidden {
+  display: none;
+}
+
+#logout {
+  padding: 6px 12px;
+  background: #3c3c3c;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+#logout:active {
+  background: #c75450;
+  border-color: #c75450;
 }
 
 #tab-bar {
@@ -117,7 +238,6 @@ header {
   display: block;
 }
 
-/* xterm.js fills its container */
 .terminal-container .xterm {
   height: 100%;
 }
@@ -158,7 +278,6 @@ header {
   border-color: #0e639c;
 }
 
-/* Phone tweak */
 @media (max-width: 480px) {
   #controls button {
     padding: 10px 2px;
@@ -166,7 +285,6 @@ header {
   }
 }
 
-/* Desktop tweak: keep control bar compact */
 @media (min-width: 768px) {
   #controls button {
     padding: 10px 14px;
