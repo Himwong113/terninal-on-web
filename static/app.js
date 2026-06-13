@@ -289,6 +289,19 @@ function initApp() {
     t.term.blur();
   });
 
+  // Refit all terminals when the terminal wrapper resizes
+  // (e.g. when Controls / Keyboard sections fold/unfold)
+  const wrapper = document.getElementById('terminal-wrapper');
+  if (wrapper && typeof ResizeObserver !== 'undefined') {
+    const resizeObserver = new ResizeObserver(() => {
+      for (const t of tabs.values()) {
+        t.fitAddon.fit();
+        t.term.scrollToBottom();
+      }
+    });
+    resizeObserver.observe(wrapper);
+  }
+
   createTerminal();
 }
 

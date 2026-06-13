@@ -220,18 +220,29 @@ header {
   background: #1177bb;
 }
 
+#terminal-wrapper {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #1e1e1e;
+  min-height: 0;
+}
+
 #terminals {
   flex: 1;
   position: relative;
   overflow: hidden;
-  background: #1e1e1e;
+  padding: 4px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
 }
 
 .terminal-container {
   position: absolute;
   inset: 0;
   display: none;
-  padding: 4px;
+  padding: 6px 6px 14px;
 }
 
 .terminal-container.active {
@@ -240,6 +251,10 @@ header {
 
 .terminal-container .xterm {
   height: 100%;
+}
+
+.terminal-container .xterm-viewport {
+  padding-bottom: 12px;
 }
 
 #controls {

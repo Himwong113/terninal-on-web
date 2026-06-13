@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Web Terminal</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
   <div id="login-overlay">
@@ -37,7 +37,9 @@
     <div id="tab-bar">
       <button id="new-tab" title="New terminal">+ New</button>
     </div>
-    <div id="terminals"></div>
+    <div id="terminal-wrapper">
+      <div id="terminals"></div>
+    </div>
     <div id="controls">
       <div class="control-section">
         <button class="section-toggle" data-section="controls">▼ Controls</button>
@@ -99,6 +101,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
-  <script src="app.js?v=4"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>
