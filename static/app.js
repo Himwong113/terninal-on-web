@@ -5,6 +5,7 @@ let tabCounter = 0;
 let activeTabId = null;
 let currentUser = null;
 let readOnlyMode = false;
+let shiftActive = false;
 const tabs = new Map();
 
 const keyMap = {
@@ -23,8 +24,28 @@ const keyMap = {
 const cmdMap = {
   clear: 'clear',
   ls: 'ls',
-  list: 'cd ..',
+  'cd ..': 'cd ..',
 };
+
+const shiftMap = {
+  '1': '!', '2': '@', '3': '#', '4': '$', '5': '%',
+  '6': '^', '7': '&', '8': '*', '9': '(', '0': ')',
+  '-': '_', '_': '-',
+  '.': '>', '>': '.',
+  '/': '?', '?': '/',
+  '@': '~', '~': '@',
+  ' ': ' ',
+};
+
+function applyShift(char) {
+  if (char >= 'a' && char <= 'z') {
+    return char.toUpperCase();
+  }
+  if (shiftMap[char] !== undefined) {
+    return shiftMap[char];
+  }
+  return char.toUpperCase();
+}
 
 function encode(str) {
   return new TextEncoder().encode(str);
