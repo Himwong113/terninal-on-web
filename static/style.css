@@ -335,6 +335,19 @@ header {
   text-transform: uppercase;
 }
 
+#controls .shift-toggle.shift-one-shot {
+  background: #0e639c;
+  border-color: #1177bb;
+  color: #fff;
+}
+
+#controls .shift-toggle.shift-caps {
+  background: #1177bb;
+  border-color: #4fc3f7;
+  color: #fff;
+  box-shadow: 0 0 0 2px #4fc3f7;
+}
+
 @media (max-width: 480px) {
   #controls button:not(.section-toggle) {
     padding: 10px 1px;
@@ -351,4 +364,31 @@ header {
     padding: 10px 10px;
     font-size: 15px;
   }
+}
+
+/* iOS-style keyboard panel switching */
+.kb-panel-hidden {
+  display: none;
+}
+
+.kb-switch {
+  flex: 1.5 1 0 !important;
+  text-transform: none;
+  background: #555 !important;
+  border-color: #666 !important;
+}
+
+.kb-switch:active {
+  background: #0e639c !important;
+  border-color: #0e639c !important;
+}
+
+.key-space {
+  flex: 3 1 0 !important;
+  text-transform: none;
+}
+
+.key-return {
+  flex: 2 1 0 !important;
+  text-transform: none;
 }

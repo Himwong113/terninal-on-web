@@ -5,7 +5,8 @@ let tabCounter = 0;
 let activeTabId = null;
 let currentUser = null;
 let readOnlyMode = false;
-let shiftActive = false;
+let shiftState = 0; // 0=off, 1=one-shot, 2=caps-lock
+let lastShiftTap = 0;
 const tabs = new Map();
 
 const keyMap = {
@@ -49,6 +50,13 @@ function applyShift(char) {
 
 function encode(str) {
   return new TextEncoder().encode(str);
+}
+
+function updateShiftBtn() {
+  const btn = document.querySelector('[data-key="shift"]');
+  if (!btn) return;
+  btn.classList.toggle('shift-one-shot', shiftState === 1);
+  btn.classList.toggle('shift-caps', shiftState === 2);
 }
 
 // ---------------------------------------------------------------------------
@@ -182,6 +190,10 @@ function createTerminal() {
 
   term.open(termEl);
 
+  term.onTitleChange((title) => {
+    tabEl.querySelector('.tab-title').textContent = title || `Tab ${id}`;
+  });
+
   function resize() {
     fitAddon.fit();
     if (socket.readyState === WebSocket.OPEN) {
@@ -290,6 +302,33 @@ function initApp() {
       return;
     }
 
+    if (e.target.dataset.key === 'shift') {
+      const now = Date.now();
+      if (shiftState === 0) {
+        shiftState = 1; // off → one-shot
+      } else if (shiftState === 1 && now - lastShiftTap < 500) {
+        shiftState = 2; // double-tap → caps-lock
+      } else if (shiftState === 1) {
+        shiftState = 0; // tap again → off
+      } else {
+        shiftState = 0; // caps-lock tap → off
+      }
+      lastShiftTap = now;
+      updateShiftBtn();
+      return;
+    }
+
+    if (e.target.dataset.key === 'kb-symbols') {
+      document.getElementById('kb-letters').classList.add('kb-panel-hidden');
+      document.getElementById('kb-symbols').classList.remove('kb-panel-hidden');
+      return;
+    }
+    if (e.target.dataset.key === 'kb-letters') {
+      document.getElementById('kb-symbols').classList.add('kb-panel-hidden');
+      document.getElementById('kb-letters').classList.remove('kb-panel-hidden');
+      return;
+    }
+
     const t = tabs.get(activeTabId);
     if (!t || t.socket.readyState !== WebSocket.OPEN) return;
 
@@ -304,7 +343,13 @@ function initApp() {
     } else if (cmd && cmdMap[cmd]) {
       t.socket.send(encode(cmdMap[cmd] + '\r'));
     } else if (char !== undefined) {
-      t.socket.send(encode(char));
+      const sendChar = shiftState > 0 ? applyShift(char) : char;
+      t.socket.send(encode(sendChar));
+      if (shiftState === 1) {
+        // one-shot: reset after one char
+        shiftState = 0;
+        updateShiftBtn();
+      }
     }
     // Keep the native phone keyboard hidden after using on-screen buttons
     t.term.blur();

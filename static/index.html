@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Web Terminal</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
   <div id="login-overlay">
@@ -67,34 +67,62 @@
       <div class="control-section">
         <button class="section-toggle" data-section="keyboard">▶ Keyboard</button>
         <div class="section-content collapsed" id="section-keyboard">
-          <div class="keyboard-row">
-            <button data-char="1">1</button><button data-char="2">2</button><button data-char="3">3</button>
-            <button data-char="4">4</button><button data-char="5">5</button><button data-char="6">6</button>
-            <button data-char="7">7</button><button data-char="8">8</button><button data-char="9">9</button>
-            <button data-char="0">0</button>
+
+          <!-- Letters view (default) -->
+          <div id="kb-letters">
+            <div class="keyboard-row">
+              <button data-char="q">q</button><button data-char="w">w</button><button data-char="e">e</button>
+              <button data-char="r">r</button><button data-char="t">t</button><button data-char="y">y</button>
+              <button data-char="u">u</button><button data-char="i">i</button><button data-char="o">o</button>
+              <button data-char="p">p</button>
+            </div>
+            <div class="keyboard-row">
+              <button data-char="a">a</button><button data-char="s">s</button><button data-char="d">d</button>
+              <button data-char="f">f</button><button data-char="g">g</button><button data-char="h">h</button>
+              <button data-char="j">j</button><button data-char="k">k</button><button data-char="l">l</button>
+            </div>
+            <div class="keyboard-row">
+              <button data-key="shift" class="shift-toggle" title="Shift">⇧</button>
+              <button data-char="z">z</button><button data-char="x">x</button><button data-char="c">c</button>
+              <button data-char="v">v</button><button data-char="b">b</button><button data-char="n">n</button>
+              <button data-char="m">m</button><button data-key="backspace" title="Backspace">⌫</button>
+            </div>
+            <div class="keyboard-row">
+              <button data-key="kb-symbols" class="kb-switch">123</button>
+              <button data-char=" " class="key-space">space</button>
+              <button data-key="enter" class="key-return">return</button>
+            </div>
           </div>
-          <div class="keyboard-row">
-            <button data-char="q">q</button><button data-char="w">w</button><button data-char="e">e</button>
-            <button data-char="r">r</button><button data-char="t">t</button><button data-char="y">y</button>
-            <button data-char="u">u</button><button data-char="i">i</button><button data-char="o">o</button>
-            <button data-char="p">p</button>
+
+          <!-- Numbers / Symbols view -->
+          <div id="kb-symbols" class="kb-panel-hidden">
+            <div class="keyboard-row">
+              <button data-char="1">1</button><button data-char="2">2</button><button data-char="3">3</button>
+              <button data-char="4">4</button><button data-char="5">5</button><button data-char="6">6</button>
+              <button data-char="7">7</button><button data-char="8">8</button><button data-char="9">9</button>
+              <button data-char="0">0</button>
+            </div>
+            <div class="keyboard-row">
+              <button data-char="-">-</button><button data-char="/">/</button>
+              <button data-char=":">:</button><button data-char=";">;</button>
+              <button data-char="(">(</button><button data-char=")">)</button>
+              <button data-char="$">$</button><button data-char="&amp;">&amp;</button>
+              <button data-char="@">@</button><button data-char='"'>"</button>
+            </div>
+            <div class="keyboard-row">
+              <button data-char=".">.</button><button data-char=",">,</button>
+              <button data-char="?">?</button><button data-char="!">!</button>
+              <button data-char="'">'</button><button data-char="`">`</button>
+              <button data-char="#">#</button><button data-char="_">_</button>
+              <button data-char="~">~</button><button data-key="backspace">⌫</button>
+            </div>
+            <div class="keyboard-row">
+              <button data-key="kb-letters" class="kb-switch">ABC</button>
+              <button data-char=" " class="key-space">space</button>
+              <button data-key="enter" class="key-return">return</button>
+            </div>
           </div>
-          <div class="keyboard-row">
-            <button data-char="a">a</button><button data-char="s">s</button><button data-char="d">d</button>
-            <button data-char="f">f</button><button data-char="g">g</button><button data-char="h">h</button>
-            <button data-char="j">j</button><button data-char="k">k</button><button data-char="l">l</button>
-          </div>
-          <div class="keyboard-row">
-            <button data-key="shift" class="shift-toggle" title="Shift">⇧</button>
-            <button data-char="z">z</button><button data-char="x">x</button><button data-char="c">c</button>
-            <button data-char="v">v</button><button data-char="b">b</button><button data-char="n">n</button>
-            <button data-char="m">m</button><button data-key="backspace" title="Backspace">⌫</button>
-          </div>
-          <div class="keyboard-row">
-            <button data-char="-">-</button><button data-char="_">_</button><button data-char=".">.</button>
-            <button data-char="/">/</button><button data-char="@">@</button><button data-char=" ">Space</button>
-            <button data-key="enter">Enter</button>
-          </div>
+
         </div>
       </div>
     </div>
@@ -102,6 +130,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
-  <script src="app.js?v=5"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>
