@@ -91,6 +91,59 @@ case "$ACTION" in
 esac
 
 # ---------------------------------------------------------------------------
+# Install Claude Code "Stop" hook — Telegram notification when task done
+# ---------------------------------------------------------------------------
+if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
+    PROJECT_DIR="$(pwd)"
+    NOTIFY_SCRIPT="${PROJECT_DIR}/.claude/notify_done.sh"
+    SETTINGS_FILE="${PROJECT_DIR}/.claude/settings.local.json"
+
+    if [ ! -f "$NOTIFY_SCRIPT" ]; then
+        mkdir -p "${PROJECT_DIR}/.claude"
+        cat > "$NOTIFY_SCRIPT" <<NOTIFY_EOF
+#!/bin/bash
+set -a
+source "${PROJECT_DIR}/.env" 2>/dev/null || true
+set +a
+[ -n "\$TELEGRAM_BOT_TOKEN" ] && [ -n "\$TELEGRAM_CHAT_ID" ] || exit 0
+curl -s -X POST "https://api.telegram.org/bot\${TELEGRAM_BOT_TOKEN}/sendMessage" \\
+  -d "chat_id=\${TELEGRAM_CHAT_ID}&text=Claude+Code+task+done" > /dev/null 2>&1 || true
+NOTIFY_EOF
+        chmod +x "$NOTIFY_SCRIPT"
+        echo "Created $NOTIFY_SCRIPT"
+    fi
+
+    if [ -f "$SETTINGS_FILE" ]; then
+        HAS_HOOK=$(python3 -c "
+import json
+try:
+    d = json.load(open('$SETTINGS_FILE'))
+    found = any('notify_done' in str(h) for h in d.get('hooks', {}).get('Stop', []))
+    print('yes' if found else 'no')
+except:
+    print('no')
+")
+        if [ "$HAS_HOOK" = "no" ]; then
+            python3 - "$SETTINGS_FILE" "$NOTIFY_SCRIPT" <<'PYEOF'
+import json, sys
+path, cmd = sys.argv[1], sys.argv[2]
+d = json.load(open(path))
+d.setdefault('hooks', {}).setdefault('Stop', []).append({
+    'matcher': '',
+    'hooks': [{'type': 'command', 'command': f'bash "{cmd}"'}]
+})
+json.dump(d, open(path, 'w'), indent=2)
+print('Stop hook registered.')
+PYEOF
+        else
+            echo "Telegram Stop hook already registered."
+        fi
+    fi
+else
+    echo "TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID not set — skipping Stop hook."
+fi
+
+# ---------------------------------------------------------------------------
 # Virtual environment
 # ---------------------------------------------------------------------------
 if [ ! -d .venv ]; then

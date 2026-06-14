@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Web Terminal</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
-  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
   <div id="login-overlay">
@@ -31,6 +31,19 @@
       <span>Web Terminal</span>
       <div id="header-right">
         <span id="readonly-badge" class="hidden">READ ONLY</span>
+        <select id="font-size-select" title="Terminal font size">
+          <option value="8">8pt</option>
+          <option value="10">10pt</option>
+          <option value="11">11pt</option>
+          <option value="12">12pt</option>
+          <option value="13">13pt</option>
+          <option value="14">14pt</option>
+          <option value="16">16pt</option>
+          <option value="18">18pt</option>
+          <option value="20">20pt</option>
+          <option value="22">22pt</option>
+          <option value="24">24pt</option>
+        </select>
         <button id="logout">Logout</button>
       </div>
     </header>
@@ -39,6 +52,10 @@
     </div>
     <div id="terminal-wrapper">
       <div id="terminals"></div>
+      <div id="scroll-btns">
+        <button id="scroll-up" title="Scroll up">▲</button>
+        <button id="scroll-down" title="Scroll down">▼</button>
+      </div>
     </div>
     <div id="controls">
       <div class="control-section">
@@ -130,6 +147,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>

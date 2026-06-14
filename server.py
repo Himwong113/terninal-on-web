@@ -10,6 +10,8 @@ import signal
 import struct
 import sys
 import termios
+import re
+import subprocess
 import time
 
 import aiohttp
@@ -61,6 +63,19 @@ def generate_token():
 
 def generate_otp():
     return f"{secrets.randbelow(1000000):06d}"
+
+
+def tmux_session_exists(name):
+    result = subprocess.run(
+        ["tmux", "has-session", "-t", name],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    return result.returncode == 0
+
+
+def sanitize_tab_id(tab_id):
+    return re.sub(r'[^a-z0-9]', '', str(tab_id).lower())[:16] or '1'
 
 
 def cleanup_expired():
@@ -183,6 +198,13 @@ async def terminal_ws(request):
         raise web.HTTPForbidden()
 
     read_only = session["read_only"]
+    username = session["username"]
+
+    # tab_id from query param; sanitize to alphanumeric+dash
+    raw_tab = request.rel_url.query.get("tab", "1")
+    tab_id = re.sub(r"[^a-z0-9]", "", raw_tab.lower())[:16] or "1"
+    session_name = f"web-{re.sub(r'[^a-z0-9]', '', username.lower())}-{tab_id}"
+
     ws = web.WebSocketResponse()
     await ws.prepare(request)
 
@@ -192,10 +214,15 @@ async def terminal_ws(request):
     if pid == 0:
         env = os.environ.copy()
         env["TERM"] = "xterm-256color"
-        os.execvpe("/bin/bash", ["/bin/bash"], env)
+        if tmux_session_exists(session_name):
+            os.execvpe("tmux", ["tmux", "attach-session", "-t", session_name], env)
+        else:
+            home = os.path.expanduser("~")
+            os.execvpe("tmux", ["tmux", "new-session", "-s", session_name, "-c", home], env)
 
     set_winsize(fd, cols, rows)
     loop = asyncio.get_event_loop()
+    intentional_close = False
 
     async def pty_to_ws():
         while True:
@@ -221,14 +248,26 @@ async def terminal_ws(request):
                     data = json.loads(msg.data)
                     if data.get("type") == "resize":
                         set_winsize(fd, data["cols"], data["rows"])
+                    elif data.get("type") == "close":
+                        intentional_close = True
                 except json.JSONDecodeError:
                     pass
     finally:
         task.cancel()
-        try:
-            os.kill(pid, signal.SIGTERM)
-        except ProcessLookupError:
-            pass
+        if intentional_close:
+            # Kill the tmux session so the shell dies
+            try:
+                subprocess.run(
+                    ["tmux", "kill-session", "-t", session_name],
+                    check=False, capture_output=True,
+                )
+            except Exception:
+                pass
+            try:
+                os.kill(pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+        # Always clean up the pty fd and reap child
         try:
             os.waitpid(pid, os.WNOHANG)
         except ChildProcessError:

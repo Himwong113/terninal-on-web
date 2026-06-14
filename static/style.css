@@ -304,26 +304,39 @@ header {
   display: none;
 }
 
-.control-row,
-.keyboard-row {
+.control-row {
   display: flex;
   gap: 6px;
+}
+
+.keyboard-row {
+  display: flex;
+  gap: 4px;
 }
 
 #controls button:not(.section-toggle) {
   flex: 1 1 0;
   min-width: 0;
-  padding: 12px 2px;
-  font-size: 14px;
+  padding: 13px 2px;
+  font-size: 15px;
   font-weight: 500;
   background: #3c3c3c;
   color: #fff;
   border: 1px solid #555;
-  border-radius: 8px;
+  border-radius: 7px;
   touch-action: manipulation;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   line-height: 1.2;
+}
+
+/* Keyboard letter/symbol keys — more compact than control keys */
+#kb-letters button,
+#kb-symbols button {
+  padding: 10px 2px;
+  font-size: 14px;
+  font-weight: 400;
+  border-radius: 6px;
 }
 
 #controls button:not(.section-toggle):active {
@@ -350,25 +363,45 @@ header {
 
 @media (max-width: 480px) {
   #controls button:not(.section-toggle) {
-    padding: 10px 1px;
-    font-size: 12px;
+    padding: 11px 1px;
+    font-size: 14px;
+  }
+  #kb-letters button,
+  #kb-symbols button {
+    padding: 8px 1px;
+    font-size: 13px;
+  }
+  .keyboard-row {
+    gap: 3px;
   }
   .section-toggle {
-    font-size: 13px;
-    padding: 8px;
+    font-size: 14px;
+    padding: 10px;
   }
 }
 
 @media (min-width: 768px) {
   #controls button:not(.section-toggle) {
-    padding: 10px 10px;
+    padding: 14px 8px;
+    font-size: 16px;
+  }
+  #kb-letters button,
+  #kb-symbols button {
+    padding: 12px 4px;
     font-size: 15px;
   }
 }
 
+#kb-letters,
+#kb-symbols {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 /* iOS-style keyboard panel switching */
 .kb-panel-hidden {
-  display: none;
+  display: none !important;
 }
 
 .kb-switch {
@@ -391,4 +424,60 @@ header {
 .key-return {
   flex: 2 1 0 !important;
   text-transform: none;
+}
+
+/* Font size selector */
+#font-size-select {
+  background: #3c3c3c;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 13px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+#font-size-select:focus {
+  outline: none;
+  border-color: #0e639c;
+}
+
+/* Floating scroll buttons */
+#scroll-btns {
+  position: absolute;
+  right: 8px;
+  bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+#scroll-btns button {
+  width: 38px;
+  height: 38px;
+  background: rgba(44, 44, 44, 0.88);
+  color: #ccc;
+  border: 1px solid #555;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  pointer-events: all;
+  backdrop-filter: blur(4px);
+}
+
+#scroll-btns button:active {
+  background: #0e639c;
+  border-color: #0e639c;
+  color: #fff;
 }

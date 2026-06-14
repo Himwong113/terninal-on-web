@@ -7,6 +7,7 @@ let currentUser = null;
 let readOnlyMode = false;
 let shiftState = 0; // 0=off, 1=one-shot, 2=caps-lock
 let lastShiftTap = 0;
+let termFontSize = parseInt(localStorage.getItem('termFontSize') || '14');
 const tabs = new Map();
 
 const keyMap = {
@@ -166,16 +167,13 @@ function createTerminal() {
 
   const term = new Terminal({
     cursorBlink: true,
-    fontSize: 14,
+    fontSize: termFontSize,
     fontFamily: 'Menlo, Monaco, Consolas, "Liberation Mono", monospace',
     theme: { background: '#1e1e1e', foreground: '#d4d4d4' },
     allowProposedApi: true,
   });
   const fitAddon = new FitAddon.FitAddon();
   term.loadAddon(fitAddon);
-
-  const socket = new WebSocket(wsUrl);
-  socket.binaryType = 'arraybuffer';
 
   const termEl = document.createElement('div');
   termEl.className = 'terminal-container';
@@ -194,10 +192,56 @@ function createTerminal() {
     tabEl.querySelector('.tab-title').textContent = title || `Tab ${id}`;
   });
 
+  // intentionalClose = true when user explicitly closes the tab (X button)
+  let intentionalClose = false;
+  let reconnectTimer = null;
+
+  function connectSocket() {
+    const socket = new WebSocket(`${wsUrl}?tab=${id}`);
+    socket.binaryType = 'arraybuffer';
+
+    const t = tabs.get(id);
+    if (t) t.socket = socket;
+
+    socket.onopen = () => {
+      // Clear any reconnecting message on reconnect
+      if (t && t.reconnecting) {
+        term.write('\r\n\x1b[32m[Reconnected]\x1b[0m\r\n');
+        t.reconnecting = false;
+      }
+      resize();
+    };
+
+    socket.onmessage = (event) => {
+      const data = new Uint8Array(event.data);
+      term.write(data);
+    };
+
+    socket.onclose = () => {
+      if (intentionalClose) return;
+      const entry = tabs.get(id);
+      if (!entry) return; // tab already removed
+      entry.reconnecting = true;
+      term.write('\r\n\x1b[33m[Disconnected — reconnecting in 2s...]\x1b[0m\r\n');
+      reconnectTimer = setTimeout(() => {
+        if (!intentionalClose && tabs.has(id)) {
+          connectSocket();
+        }
+      }, 2000);
+    };
+
+    socket.onerror = (err) => {
+      console.error(err);
+    };
+
+    return socket;
+  }
+
   function resize() {
     fitAddon.fit();
-    if (socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify({
+    const t = tabs.get(id);
+    if (t && t.socket && t.socket.readyState === WebSocket.OPEN) {
+      t.socket.send(JSON.stringify({
         type: 'resize',
         cols: term.cols,
         rows: term.rows,
@@ -205,28 +249,11 @@ function createTerminal() {
     }
   }
 
-  socket.onopen = () => {
-    resize();
-  };
-
-  socket.onmessage = (event) => {
-    const data = new Uint8Array(event.data);
-    term.write(data);
-  };
-
-  socket.onclose = () => {
-    term.write('\r\n[Disconnected]\r\n');
-  };
-
-  socket.onerror = (err) => {
-    term.write('\r\n[Connection error]\r\n');
-    console.error(err);
-  };
-
   term.onData((data) => {
     if (readOnlyMode) return;
-    if (socket.readyState === WebSocket.OPEN) {
-      socket.send(encode(data));
+    const t = tabs.get(id);
+    if (t && t.socket && t.socket.readyState === WebSocket.OPEN) {
+      t.socket.send(encode(data));
     }
   });
 
@@ -242,7 +269,8 @@ function createTerminal() {
     }
   });
 
-  tabs.set(id, { term, socket, element: termEl, tabEl, fitAddon });
+  const socket = connectSocket();
+  tabs.set(id, { term, socket, element: termEl, tabEl, fitAddon, reconnecting: false, connectSocket, intentionalCloseRef: () => intentionalClose, stopReconnect: () => { intentionalClose = true; clearTimeout(reconnectTimer); } });
   switchTab(id);
   setTimeout(resize, 0);
 
@@ -266,7 +294,12 @@ function switchTab(id) {
 function closeTab(id) {
   const t = tabs.get(id);
   if (!t) return;
+  // Stop auto-reconnect and signal server to kill tmux session
+  if (t.stopReconnect) t.stopReconnect();
   try {
+    if (t.socket && t.socket.readyState === WebSocket.OPEN) {
+      t.socket.send(JSON.stringify({ type: 'close' }));
+    }
     t.socket.close();
   } catch (e) {
     // ignore
@@ -287,6 +320,30 @@ function closeTab(id) {
 }
 
 function initApp() {
+  // Set font size selector to saved value
+  const fontSel = document.getElementById('font-size-select');
+  if (fontSel) {
+    fontSel.value = String(termFontSize);
+    fontSel.addEventListener('change', () => {
+      termFontSize = parseInt(fontSel.value);
+      localStorage.setItem('termFontSize', termFontSize);
+      for (const t of tabs.values()) {
+        t.term.options.fontSize = termFontSize;
+        t.fitAddon.fit();
+      }
+    });
+  }
+
+  // Floating scroll buttons
+  document.getElementById('scroll-up').addEventListener('click', () => {
+    const t = tabs.get(activeTabId);
+    if (t) t.term.scrollLines(-5);
+  });
+  document.getElementById('scroll-down').addEventListener('click', () => {
+    const t = tabs.get(activeTabId);
+    if (t) t.term.scrollLines(5);
+  });
+
   document.getElementById('new-tab').addEventListener('click', createTerminal);
 
   // Section toggles
@@ -367,6 +424,48 @@ function initApp() {
     });
     resizeObserver.observe(wrapper);
   }
+
+  // Reconnect all tabs when page becomes visible again (e.g. after lock screen)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return;
+    for (const [id, t] of tabs) {
+      if (!t.intentionalCloseRef || t.intentionalCloseRef()) continue;
+      const state = t.socket ? t.socket.readyState : WebSocket.CLOSED;
+      if (state === WebSocket.CLOSED || state === WebSocket.CLOSING) {
+        // connectSocket is closed over inside createTerminal; trigger via reconnect mechanism
+        // Re-create socket by dispatching a synthetic close event won't work — instead
+        // we store connectSocket on the tab entry and call it directly
+        if (t.connectSocket) {
+          t.connectSocket();
+        }
+      }
+    }
+  });
+
+  // Font size selector
+  const fontSelect = document.getElementById('font-size-select');
+  if (fontSelect) {
+    // Set initial value
+    fontSelect.value = String(termFontSize);
+    fontSelect.addEventListener('change', () => {
+      termFontSize = parseInt(fontSelect.value);
+      localStorage.setItem('termFontSize', termFontSize);
+      for (const t of tabs.values()) {
+        t.term.options.fontSize = termFontSize;
+        t.fitAddon.fit();
+      }
+    });
+  }
+
+  // Scroll buttons
+  document.getElementById('scroll-up').addEventListener('click', () => {
+    const t = tabs.get(activeTabId);
+    if (t) t.term.scrollLines(-5);
+  });
+  document.getElementById('scroll-down').addEventListener('click', () => {
+    const t = tabs.get(activeTabId);
+    if (t) t.term.scrollLines(5);
+  });
 
   createTerminal();
 }
