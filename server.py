@@ -80,7 +80,7 @@ async def send_otp(code, chat_id):
             await asyncio.wait_for(
                 bot.send_message(
                     chat_id=int(chat_id),
-                    text=f"🔐 Web Terminal OTP: {code}\nValid for 5 minutes.",
+                    text=f"🔐 Web Terminal OTP: {code}",#\nValid for 5 minutes.",
                 ),
                 timeout=10,
             )
