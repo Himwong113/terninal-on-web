@@ -242,12 +242,28 @@ async def terminal_ws(request):
         async for msg in ws:
             if msg.type == aiohttp.WSMsgType.BINARY:
                 if not read_only:
+                    # Exit tmux copy-mode (no-op if not in copy-mode)
+                    subprocess.run(
+                        ["tmux", "send-keys", "-t", session_name, "-X", "cancel"],
+                        check=False, capture_output=True,
+                    )
                     await loop.run_in_executor(None, os.write, fd, msg.data)
             elif msg.type == aiohttp.WSMsgType.TEXT:
                 try:
                     data = json.loads(msg.data)
                     if data.get("type") == "resize":
                         set_winsize(fd, data["cols"], data["rows"])
+                    elif data.get("type") == "scroll":
+                        direction = data.get("direction", "up")
+                        tmux_key = "scroll-up" if direction == "up" else "scroll-down"
+                        subprocess.run(
+                            ["tmux", "copy-mode", "-t", session_name],
+                            check=False, capture_output=True,
+                        )
+                        subprocess.run(
+                            ["tmux", "send-keys", "-t", session_name, "-X", tmux_key],
+                            check=False, capture_output=True,
+                        )
                     elif data.get("type") == "close":
                         intentional_close = True
                 except json.JSONDecodeError:

@@ -334,14 +334,18 @@ function initApp() {
     });
   }
 
-  // Floating scroll buttons
+  // Floating scroll buttons — send tmux copy-mode scroll via WS
   document.getElementById('scroll-up').addEventListener('click', () => {
     const t = tabs.get(activeTabId);
-    if (t) t.term.scrollLines(-5);
+    if (t && t.socket && t.socket.readyState === WebSocket.OPEN) {
+      t.socket.send(JSON.stringify({ type: 'scroll', direction: 'up' }));
+    }
   });
   document.getElementById('scroll-down').addEventListener('click', () => {
     const t = tabs.get(activeTabId);
-    if (t) t.term.scrollLines(5);
+    if (t && t.socket && t.socket.readyState === WebSocket.OPEN) {
+      t.socket.send(JSON.stringify({ type: 'scroll', direction: 'down' }));
+    }
   });
 
   document.getElementById('new-tab').addEventListener('click', createTerminal);
@@ -456,16 +460,6 @@ function initApp() {
       }
     });
   }
-
-  // Scroll buttons
-  document.getElementById('scroll-up').addEventListener('click', () => {
-    const t = tabs.get(activeTabId);
-    if (t) t.term.scrollLines(-5);
-  });
-  document.getElementById('scroll-down').addEventListener('click', () => {
-    const t = tabs.get(activeTabId);
-    if (t) t.term.scrollLines(5);
-  });
 
   createTerminal();
 }
